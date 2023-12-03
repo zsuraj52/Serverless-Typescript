@@ -1,0 +1,85 @@
+service: suraj-serverless-typescript-api
+
+plugins:
+  - serverless-webpack
+  - serverless-dynamodb-local
+  - serverless-offline
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+  serverless-offline:
+    httpPort: 3003
+  dynamodb:
+    start:
+      port: 5000
+      inMemory: true
+      migrate: true
+    stages:
+      - dev
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  stage: dev
+  region: ap-south-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+      Resource: 
+        - arn:aws:dynamodb:ap-south-1:477748561388:table/SurajUserManagementCRUDServerlessTS
+
+functions:
+  createUser:
+    handler: src/functions/lambda.createUser
+    events:
+      - http:
+          method: post
+          path: user
+          cors: true
+  getUser:
+    handler: src/functions/lambda.getUser
+    events:
+      - http:
+          method: get
+          path: user/{userId}
+          cors: true
+  getAllUsersList:
+    handler: src/functions/lambda.getAllUsersList
+    events:
+      - http:
+          method: get
+          path: users
+          cors: true
+  updateUser:
+    handler: src/functions/lambda.updateUser
+    events:
+      - http:
+          method: put
+          path: user/{userId}
+          cors: true
+  deleteUser:
+    handler: src/functions/lambda.deleteUser
+    events:
+      - http:
+          method: delete
+          path: user/{userId}
+          cors: true
+
+resources:
+  Resources:
+    SurajUserManagementCRUDServerlessTS:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: SurajUserManagementCRUDServerlessTS
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
